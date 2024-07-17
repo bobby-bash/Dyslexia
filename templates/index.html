@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Handwriting Capture</title>
+    <style>
+        canvas {
+            border: 1px solid black;
+        }
+    </style>
+</head>
+<body>
+    <h1>Draw Something</h1>
+    <canvas id="canvas" width="800" height="400"></canvas>
+    <br>
+    <button id="saveBtn">Save Drawing</button>
+    <div id="controls">
+          <button id="erase">Erase</button>
+    </div>
+    <p id="outputText"></p>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const context = canvas.getContext('2d');
+        let drawing = false;
+
+        // Set the canvas background to white
+        function setWhiteBackground() {
+            context.fillStyle = 'white';
+            context.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        // Initialize the canvas with a white background
+        setWhiteBackground();
+
+        canvas.addEventListener('mousedown', (event) => {
+            drawing = true;
+            context.beginPath();  // Start a new path when the mouse is pressed
+            context.moveTo(event.clientX - canvas.offsetLeft, event.clientY - canvas.offsetTop);
+        });
+
+        canvas.addEventListener('mouseup', () => drawing = false);
+        canvas.addEventListener('mouseout', () => drawing = false);
+
+        canvas.addEventListener('mousemove', (event) => {
+            if (!drawing) return;
+            context.lineWidth = 5;  // Increased line width
+            context.lineCap = 'round';
+            context.strokeStyle = 'black';
+            context.lineTo(event.clientX - canvas.offsetLeft, event.clientY - canvas.offsetTop);
+            context.stroke();
+        });
+        document.getElementById('erase').addEventListener('click', () => {
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            setWhiteBackground();
+        });
+
+        document.getElementById('saveBtn').addEventListener('click', () => {
+            const dataUrl = canvas.toDataURL('image/png');
+            fetch('/save_image', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ image: dataUrl })
+            }).then(response => response.json())
+            .then(data => {
+                if (data.message === 'Image saved successfully!') {
+                    document.getElementById('outputText').innerText = `Extracted Text: ${data.text}`;
+                } else {
+                    document.getElementById('outputText').innerText = 'Failed to save image.';
+                }
+            });        
+        });
+    </script>
+</body>
+</html>
+
