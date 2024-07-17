@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 import base64
 import re
+from gradio_client import Client
 
 import easyocr
 
@@ -32,6 +33,15 @@ def save_image():
 
     print("Extracted Text:")
     print(text)
+
+    from gradio_client import Client
+
+    client = Client("https://3e212b017dcbc0d3e9.gradio.live/")
+    result = client.predict(
+        text="Hello!!",
+        api_name="/predict"
+        )
+    print(result)
 
     return jsonify({'message': 'Image saved successfully!', 'text': text}), 200
 
